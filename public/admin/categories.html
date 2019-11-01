@@ -31,7 +31,7 @@
         <strong>错误！</strong>发生XXX错误
       </div> -->
       <div class="row">
-        <div class="col-md-4">
+        <div class="col-md-4" id="modifyBox">
           <form id="additem">
             <h2>添加分类</h2>
             <div class="form-group">
@@ -116,13 +116,29 @@
         <td class="text-center"><input type="checkbox"></td>
         <td>{{$value.title}}</td>
         <td class="text-center">
-          <a href="javascript:;" class="btn btn-info btn-xs">编辑</a>
-          <a href="javascript:;" class="btn btn-danger btn-xs">删除</a>
+          <a href="javascript:;" data-id = "{{$value._id}}" class="btn btn-info btn-xs edit">编辑</a>
+          <a href="javascript:;" data-id = "{{$value._id}}" class="btn btn-danger btn-xs delete">删除</a>
         </td>
       </tr>
       {{/each}}
   </script>
-
+  <!-- 定义修改分类模板 -->
+  <script type="text/html" id="modifyTpl">
+    <form id="modifyitem" data-id = "{{_id}}">
+      <h2>修改分类</h2>
+      <div class="form-group">
+        <label>名称</label>
+        <input class="form-control" type="text" placeholder="请输入分类名称" name="title" value="{{title}}">
+      </div>
+      <div class="form-group">
+        <label>图标</label>
+        <input class="form-control" type="text" placeholder="请输入分类图标类名" name="className" value="className">
+      </div>
+      <div class="form-group">
+        <button class="btn btn-primary" type="submit">保存</button>
+      </div>
+    </form>
+  </script>
   <script>
     $(function () {
       //添加分类功能
@@ -150,14 +166,66 @@
         type: 'get',
         url: 'http://47.111.184.55:3000/categories',
         success: function (response) {
-          console.log(response)
+          // console.log(response)
           var html = template('addTpl', {
             data: response,
           });
           $('#addbox').html(html);
         }
       });
+
+      //分类信息编辑操作
+      //利用事件委托为编辑按钮注册点击事件
+      $('#addbox').on('click', '.edit', function () {
+        var id = $(this).attr('data-id');
+        $.ajax({
+          type: 'get',
+          url: `http://47.111.184.55:3000/categories/${id}`,
+          success: function (response) {
+            var html = template('modifyTpl', response);
+            $('#modifyBox').html(html);
+          }
+        });
+      });
+      //将数据同步到数据库中
+      //利用事件委托为表单注册submi提交事件
+      $('#modifyBox').on('submit', '#modifyitem', function () {
+        //获取用户修改后的表单所有内容和ID
+        var formData = $(this).serialize();
+        var id = $(this).attr('data-id');
+        // console.log(id);
+        //发送ajax请求
+        $.ajax({
+          type: 'put',
+          url: `http://47.111.184.55:3000/categories/${id}`,
+          data: formData,
+          success: function (response) {
+            location.reload();
+          }
+        });
+        //阻止表单的默认行为
+        return false;
+      });
+      //删除分类信息
+      //利用事件委托为删除按钮注册点击事件
+      $('#addbox').on('click', '.delete', function () {
+        //获取当前被点击的分类id
+        var id = $(this).attr('data-id');
+        var isDelete = confirm('确认要删除吗?');
+        if (isDelete) {
+          //发送ajax请求
+          $.ajax({
+            type: 'delete',
+            url: `http://47.111.184.55:3000/categories/${id}`,
+            success: function (response) {
+              location.reload();
+            }
+          });
+        }
+      });
+      
     });
+
   </script>
 </body>
 
