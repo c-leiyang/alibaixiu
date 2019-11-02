@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
   <meta charset="utf-8">
   <title>Add new post &laquo; Admin</title>
@@ -9,6 +10,7 @@
   <link rel="stylesheet" href="../assets/css/admin.css">
   <script src="../assets/vendors/nprogress/nprogress.js"></script>
 </head>
+
 <body>
   <script>NProgress.start()</script>
 
@@ -28,15 +30,16 @@
       <!-- <div class="alert alert-danger">
         <strong>错误！</strong>发生XXX错误
       </div> -->
-      <form class="row">
+      <form class="row" id="addForm">
         <div class="col-md-9">
           <div class="form-group">
             <label for="title">标题</label>
             <input id="title" class="form-control input-lg" name="title" type="text" placeholder="文章标题">
           </div>
           <div class="form-group">
-            <label for="content">标题</label>
-            <textarea id="content" class="form-control input-lg" name="content" cols="30" rows="10" placeholder="内容"></textarea>
+            <label for="content">内容</label>
+            <textarea id="content" class="form-control input-lg" name="content" cols="30" rows="10"
+              placeholder="内容"></textarea>
           </div>
         </div>
         <div class="col-md-3">
@@ -45,23 +48,25 @@
             <!-- show when image chose -->
             <img class="help-block thumbnail" style="display: none">
             <input id="feature" class="form-control" name="feature" type="file">
+            <!-- 创建隐藏域 -->
+            <input type="hidden" name="thumbnail" id="thumbnail">
           </div>
           <div class="form-group">
             <label for="category">所属分类</label>
             <select id="category" class="form-control" name="category">
-              <option value="1">未分类</option>
-              <option value="2">潮生活</option>
+
+
             </select>
           </div>
           <div class="form-group">
             <label for="created">发布时间</label>
-            <input id="created" class="form-control" name="created" type="datetime-local">
+            <input id="created" class="form-control" name="createAt" type="datetime-local">
           </div>
           <div class="form-group">
             <label for="status">状态</label>
-            <select id="status" class="form-control" name="status">
-              <option value="drafted">草稿</option>
-              <option value="published">已发布</option>
+            <select id="status" class="form-control" name="state">
+              <option value="0">草稿</option>
+              <option value="1">已发布</option>
             </select>
           </div>
           <div class="form-group">
@@ -111,6 +116,72 @@
 
   <script src="../assets/vendors/jquery/jquery.js"></script>
   <script src="../assets/vendors/bootstrap/js/bootstrap.js"></script>
+  <script src="../assets/vendors/art-template/template-web.js"></script>
   <script>NProgress.done()</script>
+  <!-- 获取文章分类列表模板 -->
+  <script type="text/html" id="listTpl">
+    {{each data}}
+    <option value="{{$value._id}}">{{$value.title}}</option>
+    {{/each}}
+  </script>
+
+  <script>
+    $(function () {
+      //发送ajax请求,获取文章分类
+      $.ajax({
+        type: 'get',
+        url: `http://47.111.184.55:3000/categories`,
+        success: function (response) {
+          var html = template('listTpl', {
+            data: response,
+          });
+          $('#category').html(html);
+        }
+      });
+
+      //文章缩略图上传
+      //为文章缩略图控件,input标签注册change事件
+      $('#feature').on('change', function () {
+        //创建formData表单对象
+        var formData = new FormData();
+        formData.append('cover', this.files[0]);
+        //发送ajax请求
+        $.ajax({
+          type: 'post',
+          url: `http://47.111.184.55:3000/upload`,
+          data: formData,
+          //告诉$.ajax不要对data数据进行解析处理
+          processData: false,
+          //告诉$.ajax不要对data数据格式进行设置
+          contentType: false,
+          success: function (response) {
+            console.log(response);
+            //将后台返回的上传文件的路径保存在隐藏域中
+            $("#thumbnail").val(response[0].cover);
+          }
+        });
+      });
+
+      //实现文章发布功能
+      $('#addForm').on('submit', function () {
+        //获取表单输入的所有内容
+        var formData = $(this).serialize();
+        //发送ajax请求
+        $.ajax({
+          type: 'post',
+          url: `http://47.111.184.55:3000/posts`,
+          data: formData,
+          success: function (response) {
+            // console.log(response)
+            location.href = './posts.html';
+          }
+        });
+        //阻止表单默认提交行为
+        return false;
+      });
+
+    });
+  </script>
 </body>
+
 </html>
