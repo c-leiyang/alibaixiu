@@ -35,6 +35,8 @@
 2. 逻辑层：Node.js、Express 以及 中间件
 3. 前  端：jQuery、BootStrap、art-template
 
+## Ⅳ、阿里百秀具体功能实现思路
+
 ### -----用户管理（CRUD）-----
 
 #### 一、登录功能
